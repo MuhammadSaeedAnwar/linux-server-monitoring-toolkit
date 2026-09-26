@@ -1,0 +1,47 @@
+# Monitoring configuration.
+# Secrets (DB password, etc.) live in .env, never here.
+
+thresholds:
+  cpu_percent_warning: 80
+  memory_percent_warning: 85
+  disk_percent_warning: 90
+  load_average_warning: 4.0   # compared against 1-minute load average
+
+services:
+  # Names of systemd units to check when running on a real Ubuntu host.
+  # Ignored gracefully (logged as "unsupported") on non-systemd systems
+  # such as inside a plain container or on macOS.
+  - nginx
+  - postgresql
+  - ssh
+  - docker
+
+network_checks:
+  dns:
+    hostnames:
+      - "google.com"
+      - "github.com"
+  ping:
+    targets:
+      - "8.8.8.8"
+      - "1.1.1.1"
+    count: 3
+    timeout_seconds: 2
+  tcp_ports:
+    - host: "db"
+      port: 5432
+      label: "postgres"
+    - host: "nginx"
+      port: 80
+      label: "nginx-http"
+  http_checks:
+    - url: "https://example.com"
+      expected_status: 200
+      timeout_seconds: 5
+  traceroute:
+    targets:
+      - "8.8.8.8"
+
+logging:
+  level: info
+  json: false

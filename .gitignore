@@ -1,0 +1,22 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+dist/
+build/
+
+# Data
+backups/*.sql.gz
+*.log
+
+# OS
+.DS_Store
+
+# Docker
+docker/nginx/certs/
