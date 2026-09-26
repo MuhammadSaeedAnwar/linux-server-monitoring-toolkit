@@ -1,5 +1,7 @@
 # Linux Server Deployment & Monitoring Toolkit
 
+[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
+
 A self-contained toolkit for monitoring a Linux server's health, running
 network diagnostics, checking service status, and deploying a small
 Dockerized stack (app + PostgreSQL + Nginx) with a rollback-safe deploy
@@ -112,12 +114,12 @@ sudo apt update
 sudo apt install -y python3 python3-venv python3-pip docker.io docker-compose-plugin \
     iputils-ping traceroute postgresql-client
 
-git clone <your-repo-url> linux-toolkit
+git clone https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit.git linux-toolkit
 cd linux-toolkit
 
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install ".[dev]
 
 cp .env.example .env
 # edit .env: set a real POSTGRES_PASSWORD at minimum
@@ -263,7 +265,7 @@ Example output (`check --system --json`):
 ## 12. Testing
 
 ```bash
-pip install -e ".[dev]"
+pip install ".[dev]
 pytest tests/ -v
 ```
 
@@ -281,6 +283,12 @@ pytest tests/ -v
 
 There's intentionally no integration test that spins up real Docker
 containers in CI here — see Limitations below.
+
+## 13. Failure and recovery validation
+
+The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
+
+This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
 
 ## 13. Project limitations
 
@@ -304,7 +312,7 @@ one person, not a production system with an on-call rotation behind it:
 - **Traceroute output parsing is minimal** (hop count only); it doesn't
   extract per-hop latency.
 
-## 14. Screenshots / demo instructions
+## 15. Screenshots / demo instructions
 
 No screenshots are included in this repository since the primary
 interface is a CLI and JSON output, not a GUI. To demo it live:
