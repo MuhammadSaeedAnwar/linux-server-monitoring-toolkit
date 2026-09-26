@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
 
+[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
+
 A self-contained toolkit for monitoring a Linux server's health, running
 network diagnostics, checking service status, and deploying a small
 Dockerized stack (app + PostgreSQL + Nginx) with a rollback-safe deploy
@@ -283,6 +285,12 @@ pytest tests/ -v
 
 There's intentionally no integration test that spins up real Docker
 containers in CI here — see Limitations below.
+
+## 13. Failure and recovery validation
+
+The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
+
+This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
 
 ## 13. Failure and recovery validation
 
