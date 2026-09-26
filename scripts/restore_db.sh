@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Restores a PostgreSQL backup produced by backup_db.sh.
-#
-# Usage: scripts/restore_db.sh backups/toolkit_20260101T000000Z.sql.gz
 set -euo pipefail
 
 if [ $# -ne 1 ]; then
@@ -10,7 +7,11 @@ if [ $# -ne 1 ]; then
 fi
 
 BACKUP_FILE="$1"
-[ -f "$BACKUP_FILE" ] || { echo "Backup file not found: $BACKUP_FILE" >&2; exit 1; }
+
+if [ ! -f "$BACKUP_FILE" ]; then
+    echo "Backup file not found: $BACKUP_FILE" >&2
+    exit 1
+fi
 
 if [ -f .env ]; then
     set -a
@@ -19,21 +20,37 @@ if [ -f .env ]; then
     set +a
 fi
 
-: "${POSTGRES_HOST:?POSTGRES_HOST not set (check your .env)}"
-: "${POSTGRES_PORT:?POSTGRES_PORT not set}"
-: "${POSTGRES_DB:?POSTGRES_DB not set}"
+: "${POSTGRES_DB:?POSTGRES_DB not set (check your .env)}"
 : "${POSTGRES_USER:?POSTGRES_USER not set}"
 : "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD not set}"
 
-echo "WARNING: this will restore into database '${POSTGRES_DB}' on ${POSTGRES_HOST}:${POSTGRES_PORT}."
+echo "WARNING: this will restore into database '${POSTGRES_DB}'."
 read -r -p "Type 'yes' to continue: " confirm
-[ "$confirm" = "yes" ] || { echo "Aborted."; exit 1; }
 
-echo "[restore] Restoring from $BACKUP_FILE..."
-gunzip -c "$BACKUP_FILE" | PGPASSWORD="$POSTGRES_PASSWORD" psql \
-    --host="$POSTGRES_HOST" \
-    --port="$POSTGRES_PORT" \
-    --username="$POSTGRES_USER" \
-    --dbname="$POSTGRES_DB"
+if [ "$confirm" != "yes" ]; then
+    echo "Aborted."
+    exit 1
+fi
+
+if docker compose ps --status running db 2>/dev/null | grep -q "db"; then
+    echo "[restore] Restoring into Docker Compose database..."
+
+    gunzip -c "$BACKUP_FILE" | docker compose exec -T db \
+        psql \
+        --username="$POSTGRES_USER" \
+        --dbname="$POSTGRES_DB"
+else
+    POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
+    POSTGRES_PORT="${POSTGRES_PORT:-5432}"
+
+    echo "[restore] Docker Compose database not running."
+    echo "[restore] Restoring into ${POSTGRES_HOST}:${POSTGRES_PORT}..."
+
+    gunzip -c "$BACKUP_FILE" | PGPASSWORD="$POSTGRES_PASSWORD" psql \
+        --host="$POSTGRES_HOST" \
+        --port="$POSTGRES_PORT" \
+        --username="$POSTGRES_USER" \
+        --dbname="$POSTGRES_DB"
+fi
 
 echo "[restore] Restore complete."
