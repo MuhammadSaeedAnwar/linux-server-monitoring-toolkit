@@ -2,24 +2,6 @@
 
 [![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
 
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
 A self-contained toolkit for monitoring a Linux server's health, running
 network diagnostics, checking service status, and deploying a small
 Dockerized stack (app + PostgreSQL + Nginx) with a rollback-safe deploy
@@ -66,23 +48,27 @@ check --system`), or run the whole thing as a monitoring stack with
   server) — it's a working, documented reverse-proxy baseline with
   security headers and a `/health` endpoint that `deploy.sh` uses to
   verify the stack came up correctly.
-- `db` is plain PostgreSQL 15, with schema managed by `sql/init.sql`
-  (idempotent `CREATE TABLE IF NOT EXISTS`).
+- `db` is plain PostgreSQL 15, with schema managed by
+  `monitoring/sql/init.sql` (idempotent `CREATE TABLE IF NOT EXISTS`),
+  applied by `toolkit init-db`.
 
 ### Python package layout
 
 ```
 monitoring/
-├── cli.py            # argparse CLI: check / init-db / alerts
-├── config.py          # loads config.yaml (non-secret) + .env (secrets)
-├── logger.py           # text or JSON structured logging
-├── models.py            # typed dataclasses (SystemHealth, ServiceCheck, ...)
-├── alerts.py             # turns check results into AlertEvent objects
-├── db.py                  # PostgreSQL storage layer (parameterized SQL only)
+├── cli.py              # argparse CLI: check / init-db / alerts
+├── config.py           # loads config.yaml (non-secret) + .env (secrets)
+├── logger.py           # text or JSON structured logging (to stderr)
+├── output.py           # human-readable text output
+├── models.py           # typed dataclasses (SystemHealth, ServiceCheck, ...)
+├── alerts.py           # turns check results into AlertEvent objects
+├── db.py               # PostgreSQL storage layer (parameterized SQL only)
+├── sql/init.sql        # schema, shipped inside the package
+├── data/default_config.yaml  # fallback config, shipped inside the package
 └── collectors/
-    ├── system.py           # CPU / RAM / disk / uptime / load average
-    ├── network.py           # DNS / ping / TCP port / HTTP / traceroute
-    └── services.py           # systemctl-based service status
+    ├── system.py       # CPU / RAM / disk / uptime / load average
+    ├── network.py      # DNS / ping / TCP port / HTTP / traceroute
+    └── services.py     # systemctl-based service status
 ```
 
 Each collector is independent and unit-tested in isolation; the CLI just
@@ -92,16 +78,16 @@ later.
 
 ## 3. Technologies
 
-| Concern            | Choice                          | Why |
-|---------------------|----------------------------------|-----|
-| Language             | Python 3.12 + Bash               | Python for structured logic/testing, Bash for orchestration where it's simplest |
-| System metrics        | `psutil`                        | Cross-platform, well-maintained, avoids hand-parsing `/proc` |
-| Database                | PostgreSQL 15                 | Common production choice; JSONB column used for warning lists |
-| DB driver                 | `psycopg2-binary`            | Standard, mature Postgres driver |
-| Containerization             | Docker + Docker Compose  | Reproducible local environment, matches how this would realistically ship |
-| Reverse proxy                  | Nginx                  | Industry-standard; used here for headers + health endpoint |
-| Config                            | YAML + `.env`         | Non-secret settings versioned in git; secrets never are |
-| Testing                              | `pytest` + mocking  | Fast, no real network/DB required for unit tests |
+| Concern | Choice | Why |
+|---|---|---|
+| Language | Python 3.10+ (3.12 in Docker) + Bash | Python for structured logic/testing, Bash for orchestration where it's simplest |
+| System metrics | `psutil` | Cross-platform, well-maintained, avoids hand-parsing `/proc` |
+| Database | PostgreSQL 15 | Common production choice; JSONB column used for warning lists |
+| DB driver | `psycopg2-binary` | Standard, mature Postgres driver |
+| Containerization | Docker + Docker Compose | Reproducible local environment, matches how this would realistically ship |
+| Reverse proxy | Nginx | Industry-standard; used here for headers + health endpoint |
+| Config | YAML + `.env` | Non-secret settings versioned in git; secrets never are |
+| Testing | `pytest` + mocking | Fast, no real network/DB required for unit tests |
 
 ## 4. Features
 
@@ -115,8 +101,9 @@ later.
   services, correctly distinguishing active / inactive / failed /
   "systemd not available" (e.g. inside a plain container).
 - **Deployment automation**: `scripts/deploy.sh` validates the
-  environment, builds and starts the stack, polls a health endpoint,
-  and rolls back to the previous app image if the health check fails.
+  environment, builds and starts the stack, checks both Nginx and the
+  app container, and rolls back to the previous app image if either
+  check fails.
 - **Storage**: every check result and every alert is written to
   PostgreSQL with a timestamp, queryable later.
 - **Backups**: `scripts/backup_db.sh` produces a timestamped, gzipped
@@ -132,12 +119,12 @@ sudo apt update
 sudo apt install -y python3 python3-venv python3-pip docker.io docker-compose-plugin \
     iputils-ping traceroute postgresql-client
 
-git clone https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit.git linux-toolkit
-cd linux-toolkit
+git clone https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit.git
+cd linux-server-monitoring-toolkit
 
 python3 -m venv .venv
 source .venv/bin/activate
-pip install ".[dev]
+pip install .            # or: pip install ".[dev]" to also get the test tools
 
 cp .env.example .env
 # edit .env: set a real POSTGRES_PASSWORD at minimum
@@ -147,10 +134,19 @@ Running the monitor without Docker (against a locally installed
 PostgreSQL, or just to see system/network checks with no DB at all):
 
 ```bash
-python -m monitoring.cli check --all
-python -m monitoring.cli check --system --json
-python -m monitoring.cli check --network
+toolkit check              # all collectors, human-readable text
+toolkit check --system --json
+toolkit check --network
 ```
+
+The installed `toolkit` command works from any directory. The schema and
+a default config ship inside the package (see Configuration). Running
+`python -m monitoring.cli ...` from the repo root also works.
+
+Note: the default `config/config.yaml` checks the Docker hostnames `db`
+and `nginx`, which only resolve inside the Compose network. When running
+on the host, edit those `tcp_ports` entries or expect them to report
+critical.
 
 ## 6. Docker setup
 
@@ -165,12 +161,18 @@ chmod +x scripts/*.sh
 `deploy.sh` will:
 1. Run `scripts/env_check.sh` (fails fast if `.env` is missing/incomplete
    or Docker isn't installed).
-2. Tag the currently-running app image as `linux-toolkit-app:previous`
-   (for rollback).
+2. Tag the current app image as `linux-toolkit-app:previous` (for
+   rollback). The name is fixed in `docker-compose.yml`, so it doesn't
+   depend on the folder you cloned into.
 3. Build and start `db`, `app`, and `nginx` via Docker Compose.
-4. Poll `http://localhost:8080/health` for up to 30 seconds.
-5. Roll back to the previous app image automatically if the health
-   check never succeeds.
+4. Poll Nginx's `/health` on the port from `NGINX_HOST_PORT` (shell
+   environment first, then `.env`, then 8080) for up to 30 seconds.
+5. Check the app itself: the container must be running, must not
+   restart during a 15-second window (catches crash loops), and must be
+   able to run a system check and query PostgreSQL from inside the
+   container.
+6. Roll back to the previous app image automatically if step 4 or 5
+   fails.
 
 Check it worked:
 ```bash
@@ -180,15 +182,34 @@ docker compose logs -f app
 
 ## 7. Configuration
 
-- `config/config.yaml` — thresholds, which services/hosts/URLs to check.
+- `config/config.yaml`: thresholds, which services/hosts/URLs to check.
   Safe to commit; contains no secrets.
-- `.env` (from `.env.example`) — PostgreSQL credentials, monitor
-  interval, log level, Nginx host port. **Never commit this file** (it's
-  in `.gitignore`).
+- `.env` (from `.env.example`): PostgreSQL credentials, monitor
+  interval, log level, config path, Nginx host port. **Never commit this
+  file** (it's in `.gitignore`).
 
 To monitor different services or hosts, edit the `services:` and
-`network_checks:` sections of `config/config.yaml` — no code changes
+`network_checks:` sections of `config/config.yaml`. No code changes
 needed.
+
+Which config file the CLI uses, first match wins:
+
+1. `--config PATH`
+2. `TOOLKIT_CONFIG_PATH` (environment or `.env`; relative paths are
+   resolved from the current directory)
+3. `./config/config.yaml`, if it exists in the current directory
+4. the default bundled with the package
+
+An explicit path (1 or 2) that doesn't exist is an error, not a silent
+fallback.
+
+Log level: `LOG_LEVEL` (environment or `.env`) overrides `logging.level`
+in `config.yaml`; the default is `info`. Accepted values are `debug`,
+`info`, `warning`, `error` and `critical`. Anything else falls back to
+`info` with a warning. Logs go to stderr, so `--json` output on stdout
+stays valid JSON.
+
+Real environment variables take precedence over values in `.env`.
 
 ## 8. Deployment
 
@@ -200,31 +221,43 @@ docker compose down -v   # -v also drops the pgdata volume — be sure
 ```
 
 For a config-only change (no image rebuild needed), edit
-`config/config.yaml` and restart just the app container:
+`config/config.yaml` and restart just the app container. Compose mounts
+the file into the container read-only, so the restart picks up the
+change:
 ```bash
 docker compose restart app
 ```
 
 ## 9. Monitoring examples
 
-Run all checks and store to PostgreSQL:
+Run all checks and store to PostgreSQL (`check` with no flags runs all
+collectors, the same as `--all`):
 ```bash
-python -m monitoring.cli check --all --store
+toolkit check --store
 ```
 
 Only network diagnostics, JSON output (useful for piping into another
 tool):
 ```bash
-python -m monitoring.cli check --network --json
+toolkit check --network --json
 ```
 
 View recent alerts (requires `.env` DB settings and `init-db` already
 having run):
 ```bash
-python -m monitoring.cli alerts --limit 10
+toolkit alerts --limit 10
 ```
 
-Example output (`check --system --json`):
+Example text output (`check --system`):
+```
+System   [OK      ]
+  CPU 12.3%   Memory 41.7%   Disk 58.0%
+  Load 0.42 / 0.35 / 0.30   Uptime 3d 4h 12m
+
+Alerts raised: 0
+```
+
+Example JSON output (`check --system --json`, abridged):
 ```json
 {
   "system": {
@@ -239,15 +272,29 @@ Example output (`check --system --json`):
 }
 ```
 
+With `--store`, the output also has a `"storage"` field: `"stored"`, or
+`"failed (see error log)"` if PostgreSQL was unreachable or a write
+failed. Checks still run and print in that case.
+
+Exit codes:
+
+| Code | Meaning |
+|---|---|
+| 0 | All checks OK |
+| 1 | At least one warning |
+| 2 | At least one critical result, or a configuration error |
+| 3 | Database error (results are still printed; no traceback) |
+
 ## 10. Troubleshooting guide
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `Configuration error: Missing required environment variables` | `.env` missing or incomplete | `cp .env.example .env` and fill it in |
-| `psycopg2.OperationalError: could not connect to server` | Postgres not up yet, or wrong `POSTGRES_HOST` | Wait for `db` healthcheck; if running the CLI outside Docker, set `POSTGRES_HOST=localhost` in `.env` |
+| `Cannot connect to PostgreSQL, results will not be stored` (exit code 3) | Postgres not up yet, or wrong `POSTGRES_HOST` | Wait for `db` healthcheck; if running the CLI outside Docker, set `POSTGRES_HOST=localhost` in `.env` |
+| `Configuration error (TOOLKIT_CONFIG_PATH): Config file not found` | `TOOLKIT_CONFIG_PATH` points at a missing file | Fix or unset it; relative paths resolve from the current directory |
 | Service checks all return `status: unknown` | Running inside a container/host without systemd as PID 1 | Expected — run the check on a real systemd host (or via SSH to one) to get real results |
 | `ping`/`traceroute` checks return `status: unknown` | Binaries not installed | `sudo apt install iputils-ping traceroute` (already included in `docker/app.Dockerfile`) |
-| `deploy.sh` rolls back immediately | App/Nginx failed to start, or `/health` unreachable | `docker compose logs app nginx`, check `NGINX_HOST_PORT` isn't already in use |
+| `deploy.sh` rolls back | Nginx `/health` unreachable, or the app container crash-looped / couldn't reach PostgreSQL | `docker compose logs app nginx`; check `NGINX_HOST_PORT` isn't already in use |
 | `env_check.sh` fails on placeholder password | You haven't edited `.env` yet | Set a real `POSTGRES_PASSWORD` |
 
 ## 11. Security considerations
@@ -283,11 +330,11 @@ Example output (`check --system --json`):
 ## 12. Testing
 
 ```bash
-pip install ".[dev]
+pip install ".[dev]"
 pytest tests/ -v
 ```
 
-28 unit tests cover:
+The unit tests cover:
 - System collector threshold logic (OK vs. warning states, missing
   `getloadavg` on non-POSIX systems).
 - Network collector success/failure paths for DNS, ping, TCP, and HTTP
@@ -296,8 +343,14 @@ pytest tests/ -v
 - Config loading (valid config, missing file, invalid YAML, missing
   thresholds).
 - Database layer (correct SQL is issued, connection lifecycle is
-  correct) — all with a mocked `psycopg2.connect`, so tests don't
-  require a real PostgreSQL instance.
+  correct, schema loads from the installed package), all with a mocked
+  `psycopg2.connect`, so tests don't require a real PostgreSQL instance.
+- CLI behaviour: default collectors, text vs. JSON output, exit code 3
+  and no traceback when PostgreSQL is down, `TOOLKIT_CONFIG_PATH` and
+  `LOG_LEVEL` handling, and running from outside the repo.
+- `deploy.sh` helpers (port resolution, app crash-loop detection, and a
+  rollback triggered by an unhealthy app), using stub `docker`/`curl`
+  binaries. Nothing is actually deployed.
 
 There's intentionally no integration test that spins up real Docker
 containers in CI here — see Limitations below.
@@ -308,61 +361,7 @@ The deployed stack was tested by intentionally stopping PostgreSQL while the mon
 
 This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
 
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Project limitations
+## 14. Project limitations
 
 Being upfront about scope, since this is a portfolio project built by
 one person, not a production system with an on-call rotation behind it:
@@ -404,4 +403,4 @@ sequence above captures a terminal recording without needing any GUI.
 
 ## License
 
-MIT — use this however is useful to you.
+MIT. See [LICENSE](LICENSE).

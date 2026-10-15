@@ -5,7 +5,7 @@ import pytest
 
 from monitoring.config import DatabaseConfig
 from monitoring.db import Database
-from monitoring.models import AlertEvent, ServiceCheck, Status, SystemHealth
+from monitoring.models import AlertEvent, Status, SystemHealth
 
 
 @pytest.fixture
@@ -81,3 +81,19 @@ def test_context_manager_closes_connection(mock_connect, db_config):
         assert db.conn is mock_conn
 
     mock_conn.close.assert_called_once()
+
+
+@patch("monitoring.db.psycopg2.connect")
+def test_ensure_schema_uses_packaged_sql_from_any_directory(mock_connect, db_config, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)  # no sql/ directory here
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
+    mock_connect.return_value = mock_conn
+
+    db = Database(db_config)
+    db.connect()
+    db.ensure_schema()
+
+    executed = mock_cursor.execute.call_args[0][0]
+    assert "CREATE TABLE IF NOT EXISTS system_health_checks" in executed

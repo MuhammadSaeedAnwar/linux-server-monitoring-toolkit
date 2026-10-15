@@ -2,6 +2,9 @@
 
 Supports plain text (for a terminal) or single-line JSON (for log
 aggregation / piping into other tools) depending on config.
+
+Logs go to stderr so that command output on stdout (for example
+`toolkit check --json`) stays machine-readable even when errors are logged.
 """
 
 from __future__ import annotations
@@ -26,17 +29,18 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(payload)
 
 
-def setup_logging(level: str = "info", json_format: bool = False) -> logging.Logger:
+def setup_logging(level: str = "info", json_format: bool = False, stream=None) -> logging.Logger:
     """Configure and return the toolkit's root logger.
 
     Idempotent: safe to call multiple times (e.g. once per CLI invocation)
     without stacking duplicate handlers.
     """
     logger = logging.getLogger("toolkit")
-    logger.setLevel(getattr(logging, level.upper(), logging.INFO))
+    resolved = logging.getLevelName(str(level).upper())
+    logger.setLevel(resolved if isinstance(resolved, int) else logging.INFO)
     logger.handlers.clear()
 
-    handler = logging.StreamHandler(sys.stdout)
+    handler = logging.StreamHandler(stream if stream is not None else sys.stderr)
     if json_format:
         handler.setFormatter(JsonFormatter())
     else:

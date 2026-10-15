@@ -18,6 +18,9 @@ services:
     build:
       context: .
       dockerfile: docker/app.Dockerfile
+    # Fixed image name so scripts/deploy.sh can tag/roll back the image no
+    # matter which folder the repo was cloned into.
+    image: linux-toolkit-app:latest
     restart: unless-stopped
     environment:
       POSTGRES_HOST: db
@@ -27,6 +30,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       MONITOR_INTERVAL_SECONDS: ${MONITOR_INTERVAL_SECONDS:-60}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Path inside the container; the host file is mounted there below.
+      TOOLKIT_CONFIG_PATH: /app/config/config.yaml
+    volumes:
+      - ./config/config.yaml:/app/config/config.yaml:ro
     depends_on:
       db:
         condition: service_healthy
@@ -35,6 +42,7 @@ services:
     build:
       context: .
       dockerfile: docker/nginx/Dockerfile
+    image: linux-toolkit-nginx:latest
     restart: unless-stopped
     ports:
       - "${NGINX_HOST_PORT:-8080}:80"
