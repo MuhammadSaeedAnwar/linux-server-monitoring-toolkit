@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from monitoring.config import AppConfig, ConfigError, DatabaseConfig

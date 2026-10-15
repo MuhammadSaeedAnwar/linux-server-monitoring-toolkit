@@ -16,8 +16,9 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY monitoring ./monitoring
+# Baked-in default; docker-compose.yml mounts config/config.yaml over it
+# read-only, so edits take effect with `docker compose restart app`.
 COPY config ./config
-COPY sql ./sql
 COPY scripts/entrypoint.sh /entrypoint.sh
 
 RUN pip install --no-cache-dir . && chmod +x /entrypoint.sh

@@ -20,3 +20,4 @@ backups/*.sql.gz
 
 # Docker
 docker/nginx/certs/
+monitoring/data/

@@ -9,6 +9,7 @@ appear in code or in config.yaml.
 from __future__ import annotations
 
 import json
+from importlib import resources
 from typing import Any, Optional
 
 import psycopg2
@@ -16,6 +17,16 @@ import psycopg2.extras
 
 from monitoring.config import DatabaseConfig
 from monitoring.models import AlertEvent, NetworkCheckResult, ServiceCheck, SystemHealth
+
+# Base class of every psycopg2 failure (connection refused, auth failure,
+# lost connection mid-query, ...). Re-exported so callers such as the CLI
+# can catch database problems without importing psycopg2 themselves.
+DatabaseError = psycopg2.Error
+
+
+def schema_sql() -> str:
+    """Return the bundled schema. Works from any working directory."""
+    return (resources.files("monitoring") / "sql" / "init.sql").read_text(encoding="utf-8")
 
 
 class Database:
@@ -52,11 +63,14 @@ class Database:
             raise RuntimeError("Database is not connected. Call connect() or use as a context manager.")
         return self._conn
 
-    def ensure_schema(self, sql_path: str = "sql/init.sql") -> None:
-        with open(sql_path, "r", encoding="utf-8") as f:
-            schema_sql = f.read()
+    def ensure_schema(self, sql_path: str | None = None) -> None:
+        if sql_path is None:
+            sql = schema_sql()
+        else:
+            with open(sql_path, encoding="utf-8") as f:
+                sql = f.read()
         with self.conn.cursor() as cur:
-            cur.execute(schema_sql)
+            cur.execute(sql)
 
     def insert_system_health(self, health: SystemHealth) -> None:
         with self.conn.cursor() as cur:
