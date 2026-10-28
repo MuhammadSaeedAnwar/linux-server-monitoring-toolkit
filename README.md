@@ -2,24 +2,6 @@
 
 [![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
 
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
-[![CI](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammadSaeedAnwar/linux-server-monitoring-toolkit/actions/workflows/ci.yml)
-
 A self-contained toolkit for monitoring a Linux server's health, running
 network diagnostics, checking service status, and deploying a small
 Dockerized stack (app + PostgreSQL + Nginx) with a rollback-safe deploy
@@ -137,7 +119,7 @@ cd linux-toolkit
 
 python3 -m venv .venv
 source .venv/bin/activate
-pip install ".[dev]
+pip install ".[dev]"
 
 cp .env.example .env
 # edit .env: set a real POSTGRES_PASSWORD at minimum
@@ -283,7 +265,7 @@ Example output (`check --system --json`):
 ## 12. Testing
 
 ```bash
-pip install ".[dev]
+pip install ".[dev]"
 pytest tests/ -v
 ```
 
@@ -308,61 +290,7 @@ The deployed stack was tested by intentionally stopping PostgreSQL while the mon
 
 This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
 
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Failure and recovery validation
-
-The deployed stack was tested by intentionally stopping PostgreSQL while the monitoring application remained running, waiting for the monitoring cycle to detect the failed TCP connection, then restarting PostgreSQL and verifying service recovery and the `/health` endpoint.
-
-This validates the operational workflow end to end: **failure → detection → recovery → healthy stack**.
-
-## 13. Project limitations
+## 14. Project limitations
 
 Being upfront about scope, since this is a portfolio project built by
 one person, not a production system with an on-call rotation behind it:
